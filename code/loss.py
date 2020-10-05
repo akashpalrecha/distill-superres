@@ -11,7 +11,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
+def wasserstein_loss(gen, real, critic):
+    gen_preds  = critic(gen)
+    real_preds = critic(real)
+    return real_preds.mean() - gen_preds.mean()
 
 class Loss(nn.modules.loss._Loss):
     def __init__(self, args, ckp):
@@ -19,6 +22,7 @@ class Loss(nn.modules.loss._Loss):
         print('Preparing loss function:')
 
         self.n_GPUs = args.n_GPUs
+        self.gan_loss = args.wgan
         self.loss = []
         self.feature_loss_module = nn.ModuleList()
         self.feature_loss_used = args.feature_loss_used
@@ -30,7 +34,8 @@ class Loss(nn.modules.loss._Loss):
         self.loss.append({'type': "DS", 'weight': DS_weight, 'function': nn.L1Loss()})
         self.loss.append({'type': "TS", 'weight': TS_weight, 'function': nn.L1Loss()})
           
-
+        if self.gan_loss:
+            self.loss.append({'type': "GAN", 'weight':args.d_loss_weight, 'function': wasserstein_loss})
 
         # feature loss
         if args.feature_loss_used == 1:      
@@ -63,7 +68,7 @@ class Loss(nn.modules.loss._Loss):
 
 
 
-    def forward(self, student_sr, teacher_sr, hr, student_fms, teacher_fms):
+    def forward(self, student_sr, teacher_sr, hr, student_fms, teacher_fms, critic=None):
         # DS Loss
         DS_loss = self.loss[0]['function'](student_sr, hr) * self.loss[0]['weight']
         self.log[-1, 0] += DS_loss.item()
@@ -72,7 +77,12 @@ class Loss(nn.modules.loss._Loss):
         TS_loss = self.loss[1]['function'](student_sr, teacher_sr) * self.loss[1]['weight']
         self.log[-1, 1] += TS_loss.item()
         
-        loss_sum = DS_loss + TS_loss
+        # Wasserstein loss
+        if self.gan_loss:
+            WGAN_loss = self.loss[2]['function'](student_sr, teacher_sr, critic) * self.loss[2]['weight']
+            loss_sum = DS_loss + TS_loss + WGAN_loss
+        else:
+            loss_sum = DS_loss + TS_loss
 
         
         if self.feature_loss_used == 0:

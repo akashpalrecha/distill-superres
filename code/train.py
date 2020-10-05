@@ -127,8 +127,11 @@ def prepare_criterion():
         criterion.load(student_ckp.dir)
     return criterion
 
-def prepare_optimizer():
-    optimizer = utility.make_optimizer(args, student)
+def prepare_optimizer(is_critic=False, critic=None):
+    if not is_critic:
+        optimizer = utility.make_optimizer(args, student)
+    else:
+        optimizer = utility.make_optimizer(args, target=critic, critic=True)
     if args.resume:
         optimizer.load(student_ckp.dir, epoch=len(student_ckp.log))
     return optimizer
@@ -152,12 +155,21 @@ def train(epoch):
     criterion.step()
     student.train()
     criterion.start_log()
-    
-    lr = optimizer.get_lr()
+    if args.wgan:
+        optimizer_crit.schedule()
+        critic.train()
+        d_lr = optimizer_crit.get_lr()
 
-    student_ckp.write_log(
-        '[Epoch {}]\tLearning rate: {:.2e}'.format(epoch, lr)
-    )
+    lr   = optimizer.get_lr()
+
+    if args.wgan:
+        student_ckp.write_log(
+            '[Epoch {}]\tLearning rate: {:.2e}\t Critic LR: {:.2e}'.format(epoch, lr, d_lr)
+        )
+    else:
+        student_ckp.write_log(
+            '[Epoch {}]\tLearning rate: {:.2e}\t Critic LR: {:.2e}'.format(epoch, lr, d_lr)
+        )
     
     timer_data, timer_model = utility.timer(), utility.timer()
     for batch, (lr, hr, _, idx_scale) in enumerate(train_loader):
@@ -167,6 +179,9 @@ def train(epoch):
         timer_model.tic()
         
         optimizer.zero_grad()
+        if args.wgan:
+            optimizer_crit.zero_grad()
+        
         student_fms, student_sr = student(lr)
         teacher = teacher_selector(teachers)
         teacher_fms, teacher_sr = teacher(lr)
@@ -198,10 +213,14 @@ def train(epoch):
                 aggregated_student_fms.append([fm for fm in student_fms])
                 aggregated_teacher_fms.append([fm for fm in teacher_fms])
         
-        total_loss = criterion(student_sr, teacher_sr, hr, aggregated_student_fms, aggregated_teacher_fms)
+        total_loss = criterion(student_sr, teacher_sr, hr, aggregated_student_fms, aggregated_teacher_fms, critic=critic)
             
         total_loss.backward()
         optimizer.step()
+        if args.wgan:
+            optimizer_crit.step()
+            if not args.no_critic_clip:
+                clip_module_weights(critic, min=(-1*args.clip_range), max=args.clip_range)
 
 
         timer_model.hold()
@@ -292,6 +311,11 @@ def save(is_best, epoch):
     student_ckp.plot_psnr(epoch)
     torch.save(student_ckp.log, os.path.join(save_root_path, 'psnr_log.pt'))
 
+    # save critic and critic optimizer
+    if args.wgan:
+        save_dir = os.path.join(save_root_path, 'model', 'critic_latest.pt')
+        torch.save(critic.state_dict(), save_dir)
+        optimizer_crit.save(save_dir)
 
 
 def print_args():
@@ -327,7 +351,8 @@ def print_args():
             msg += "\tfeature distillation\n"
             msg += "\t\ttype: %s\n" % args.feature_distilation_type.split("*")[1]
             msg += "\t\tposition: %s\n" % args.features
-        
+        if args.wgan:
+            msg += 'Using WGAN-type discriminator for training'
     msg += "\n\n"    
     
     return msg
@@ -343,9 +368,13 @@ if __name__ == "__main__":
 
     teachers = load_teachers()
     student_ckp, student = create_student_model()
-    criterion = prepare_criterion()
     optimizer = prepare_optimizer()
-
+    critic = None
+    if args.wgan:
+        critic = make_discriminator(args, device, student_ckp)
+        optimizer_crit = prepare_optimizer(is_critic=True, critic=critic)
+    
+    criterion = prepare_criterion()
     student_ckp.write_log(msg)
 
     

@@ -67,7 +67,16 @@ parser.add_argument('--features', default="[1,2,3]", type=str, help='features se
 parser.add_argument('--teacher', default="[RCAN]", type=str, help='teachers selected')
 parser.add_argument('--student_n_resblocks', type=int, default=6, help='number of residual blocks')
 
-
+# WGAN Training params
+parser.add_argument('--wgan', action='store true', help='use wgan training')
+parser.add_argument('--d_lr', type=float, default=0.00005)
+parser.add_argument('--d_optimizer', default= 'RMSprop', type=str, help='Optimizer used for discriminator')
+parser.add_argument('--d_blocks', default=8, type=int, help='number of conv-relu-conv-relu blocks in discriminator')
+parser.add_argument('--d_features', default=64, type=int, help='number of intermediate out_channels used for convs in discriminator')
+parser.add_argument('--d_bn', action='store true', help='use batchnorm in discriminator blocks')
+parser.add_argument('--d_loss_weight', default=1.0, type=float, help='Weight assigned to Wasserstein loss')
+parser.add_argument('--no_critic_clip', action='store true', help='do not clip critic weights at each iteration')
+parser.add_argument('--clip_range', default=0.03, type=float, help='clip critic weights in ± clip_range')
 
 # RDN hyper-parameters
 parser.add_argument('--G0', type=int, default=64, help='default number of filters. (Use in RDN)')

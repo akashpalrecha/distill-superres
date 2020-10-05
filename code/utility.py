@@ -177,24 +177,38 @@ def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
 
     return -10 * math.log10(mse)
 
-def make_optimizer(args, target):
+def make_optimizer(args, target, critic=False):
     '''
         make optimizer and scheduler together
     '''
     # optimizer
     update_parameters = filter(lambda x: x.requires_grad, target.parameters())
     kwargs_optimizer = {'lr': args.lr, 'weight_decay': args.weight_decay}
-
-    if args.optimizer == 'SGD':
-        optimizer_class = optim.SGD
-        kwargs_optimizer['momentum'] = args.momentum
-    elif args.optimizer == 'ADAM':
-        optimizer_class = optim.Adam
-        kwargs_optimizer['betas'] = args.betas
-        kwargs_optimizer['eps'] = args.epsilon
-    elif args.optimizer == 'RMSprop':
-        optimizer_class = optim.RMSprop
-        kwargs_optimizer['eps'] = args.epsilon
+    opt_name = 'optimizer.pt'
+    if not critic:
+        if args.optimizer == 'SGD':
+            optimizer_class = optim.SGD
+            kwargs_optimizer['momentum'] = args.momentum
+        elif args.optimizer == 'ADAM':
+            optimizer_class = optim.Adam
+            kwargs_optimizer['betas'] = args.betas
+            kwargs_optimizer['eps'] = args.epsilon
+        elif args.optimizer == 'RMSprop':
+            optimizer_class = optim.RMSprop
+            kwargs_optimizer['eps'] = args.epsilon
+    else:
+        kwargs_optimizer['lr'] = args.d_lr
+        opt_name = 'optimizer_critic.pt'
+        if args.d_optimizer == 'SGD':
+            optimizer_class = optim.SGD
+            kwargs_optimizer['momentum'] = args.momentum
+        elif args.d_optimizer == 'ADAM':
+            optimizer_class = optim.Adam
+            kwargs_optimizer['betas'] = args.betas
+            kwargs_optimizer['eps'] = args.epsilon
+        elif args.d_optimizer == 'RMSprop':
+            optimizer_class = optim.RMSprop
+            kwargs_optimizer['eps'] = args.epsilon
 
     # scheduler
     milestones = list(map(lambda x: int(x), args.decay.split('-')))
@@ -205,16 +219,21 @@ def make_optimizer(args, target):
     class CustomOptimizer(optimizer_class):
         def __init__(self, *args, **kwargs):
             super(CustomOptimizer, self).__init__(*args, **kwargs)
+            self.opt_name  = opt_name
+            self.is_critic = critic
 
         def _register_scheduler(self, scheduler_class, **kwargs):
             self.scheduler = scheduler_class(self, **kwargs)
 
         def save(self, save_path):
-            torch.save(self.state_dict(), os.path.join(save_path, 'optimizer.pt'))
+            torch.save(self.state_dict(), os.path.join(save_path, self.opt_name))
 
         def load(self, load_path, epoch=1):
-            self.load_state_dict(torch.load(os.path.join(load_path, 'optimizer.pt')))
-            self.param_groups[0]["lr"] = args.lr
+            self.load_state_dict(torch.load(os.path.join(load_path, self.opt_name)))
+            if not self.is_critic:
+                self.param_groups[0]["lr"] = args.lr
+            else:
+                self.param_groups[0]["lr"] = args.d_lr
             if epoch > 1:
                 for _ in range(epoch): 
                     self.scheduler.step()
