@@ -11,7 +11,7 @@ parser.add_argument('--n_threads', type=int, default=6, help='number of threads 
 
 
 # Dataset Setting
-parser.add_argument('--dir_data', type=str, default='/data/dataset/dataset/sr_dataset', help='dataset directory')
+parser.add_argument('--dir_data', type=str, default='../../datasets', help='dataset directory')
 parser.add_argument('--data_train', type=str, default='DIV2K', help='train dataset name')
 parser.add_argument('--data_test', type=str, default='Set5+Set14+B100+Urban100', help='test dataset name')
 parser.add_argument('--data_range', type=str, default='1-800/801-810', help='train/test data range')
