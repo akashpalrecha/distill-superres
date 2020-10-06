@@ -11,7 +11,7 @@ def make_discriminator(args, device, checkpoint, vgg=True):
                             features=args.d_features, 
                             bn=args.d_bn).to(device)
     else:
-        critic = models.vgg11(True, True)
+        critic = models.vgg11(True, True).to(device)
         critic = modifiy_vgg_model(critic, args.n_colors, 1, True)
         
     if args.precision == 'half':
