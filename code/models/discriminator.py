@@ -12,7 +12,7 @@ def make_discriminator(args, device, checkpoint, vgg=True):
                             bn=args.d_bn).to(device)
     else:
         critic = models.vgg11(True, True).to(device)
-        critic = modifiy_vgg_model(critic, args.n_colors, 1, True)
+        critic = modifiy_vgg_model(critic, args.n_colors, 1, True, device=device)
         
     if args.precision == 'half':
         critic.half()
@@ -125,10 +125,10 @@ def remove_vgg_dropout(model:torch.nn.Module):
     return model
 
 
-def modifiy_vgg_model(model, in_channels=None, out_features=1, remove_dropout=True):
+def modifiy_vgg_model(model, in_channels=None, out_features=1, remove_dropout=True, device='cpu'):
     if in_channels is not None:
         model = change_vgg_input_channels(model, in_channels)
     model = change_vgg_output_features(model, out_features)
     if remove_dropout:
         model = remove_vgg_dropout(model)
-    return model
+    return model.to(device)
