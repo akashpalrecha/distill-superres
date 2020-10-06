@@ -96,35 +96,32 @@ def clip_module_weights(m, min=0.01, max=0.01):
         
 
 def change_vgg_input_channels(model:torch.nn.Module, channels=1):
-    model.requires_grad_(False)
-    nw = model.features[0].weight.clone()
-    nw = nw[:, :channels, :, :].clone()
-    model.features[0].weight = torch.nn.Parameter(nw.clone())
-    model.features[0].in_channels = channels
-    model.requires_grad_(True)
+    with torch.no_grad():
+        nw = model.features[0].weight.clone()
+        nw = nw[:, :channels, :, :].clone()
+        model.features[0].weight = torch.nn.Parameter(nw.clone())
+        model.features[0].in_channels = channels
     return model
 
 
 def change_vgg_output_features(model:torch.nn.Module, out_features=1):
-    model.requires_grad_(False)
-    lin = model.classifier[-1]
-    in_features = lin.in_features
-    bias        = lin.bias is not None
-    new_lin = torch.nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
-    model.classifier[-1] = new_lin
-    model.requires_grad_(True)
+    with torch.no_grad():
+        lin = model.classifier[-1]
+        in_features = lin.in_features
+        bias        = lin.bias is not None
+        new_lin = torch.nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
+        model.classifier[-1] = new_lin
     return model
 
 
 def remove_vgg_dropout(model:torch.nn.Module):
-    model.requires_grad_(False)
-    Dropout = torch.nn.modules.dropout.Dropout
-    layers = []
-    for layer in model.classifier:
-        if not isinstance(layer, Dropout):
-            layers.append(layer)
-    model.classifier = nn.Sequential(*layers)
-    model.requires_grad_(True)
+    with torch.no_grad():
+        Dropout = torch.nn.modules.dropout.Dropout
+        layers = []
+        for layer in model.classifier:
+            if not isinstance(layer, Dropout):
+                layers.append(layer)
+        model.classifier = nn.Sequential(*layers)
     return model
 
 
