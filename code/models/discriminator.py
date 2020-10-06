@@ -1,20 +1,26 @@
 import torch
+import torchvision.models as models
 import torch.nn as nn
 import os
 
-def make_discriminator(args, device, checkpoint):
-    critic = Discriminator(in_channels=args.n_colors, 
-                          out_features=1, 
-                          blocks=args.d_blocks, 
-                          features=args.d_features, 
-                          bn=args.d_bn).to(device)
-    
+def make_discriminator(args, device, checkpoint, vgg=True):
+    if not vgg:
+        critic = Discriminator(in_channels=args.n_colors, 
+                            out_features=1, 
+                            blocks=args.d_blocks, 
+                            features=args.d_features, 
+                            bn=args.d_bn).to(device)
+    else:
+        critic = models.vgg11(True, True)
+        critic = modifiy_vgg_model(critic, args.n_colors, 1, True)
+        
     if args.precision == 'half':
         critic.half()
         
     if args.resume:
         load_from = os.path.join(checkpoint.dir, 'model', 'critic_latest.pt')
-        critic.load_state_dict_critic(torch.load(load_from))
+        # critic.load_state_dict_critic(torch.load(load_from))
+        critic.load_state_dict(torch.load(load_from))
     
     return critic
     
@@ -87,3 +93,45 @@ def clip_module_weights(m, min=0.01, max=0.01):
         m.weight.clamp_(min, max)
     if getattr(m, 'bias', False) is not False:
         m.bias.clamp_(min, max)
+        
+
+def change_vgg_input_channels(model:torch.nn.Module, channels=1):
+    model.requires_grad_(False)
+    nw = model.features[0].weight.clone()
+    nw = nw[:, :channels, :, :].clone()
+    model.features[0].weight = torch.nn.Parameter(nw.clone())
+    model.features[0].in_channels = channels
+    model.requires_grad_(True)
+    return model
+
+
+def change_vgg_output_features(model:torch.nn.Module, out_features=1):
+    model.requires_grad_(False)
+    lin = model.classifier[-1]
+    in_features = lin.in_features
+    bias        = lin.bias is not None
+    new_lin = torch.nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
+    model.classifier[-1] = new_lin
+    model.requires_grad_(True)
+    return model
+
+
+def remove_vgg_dropout(model:torch.nn.Module):
+    model.requires_grad_(False)
+    Dropout = torch.nn.modules.dropout.Dropout
+    layers = []
+    for layer in model.classifier:
+        if not isinstance(layer, Dropout):
+            layers.append(layer)
+    model.classifier = nn.Sequential(*layers)
+    model.requires_grad_(True)
+    return model
+
+
+def modifiy_vgg_model(model, in_channels=None, out_features=1, remove_dropout=True):
+    if in_channels is not None:
+        model = change_vgg_input_channels(model, in_channels)
+    model = change_vgg_output_features(model, out_features)
+    if remove_dropout:
+        model = remove_vgg_dropout(model)
+    return model
