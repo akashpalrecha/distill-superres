@@ -315,7 +315,7 @@ def save(is_best, epoch):
     if args.wgan:
         save_dir = os.path.join(save_root_path, 'model', 'critic_latest.pt')
         torch.save(critic.state_dict(), save_dir)
-        optimizer_crit.save(save_dir)
+        optimizer_crit.save(save_root_path)
 
 
 def print_args():
