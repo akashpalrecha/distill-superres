@@ -99,6 +99,8 @@ parser.add_argument('--res_scale', type=float, default=1, help='residual scaling
 parser.add_argument('--ckp_path', type=str, default='', help='checkpoint path')
 parser.add_argument('--TS', default="S", type=str, help='test teacher or student')
 
+# Bug solving
+parser.add_argument('--popen_bug', action="store_false", help="solve popen bug when training on cluster")
 
 args = parser.parse_args()
 template.set_template(args)
