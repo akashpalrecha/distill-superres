@@ -19,6 +19,7 @@ class Data:
             datasets = []
             for d in args.data_train:
                 module_name = d if d.find('DIV2K-Q') < 0 else 'DIV2KJPEG'
+                module_name = "FLICKR2K" if d.find("Flickr2k") else module_name
                 m = import_module('data.' + module_name.lower())
                 datasets.append(getattr(m, module_name)(args, name=d))
 

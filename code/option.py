@@ -14,7 +14,7 @@ parser.add_argument('--n_threads', type=int, default=6, help='number of threads 
 parser.add_argument('--dir_data', type=str, default='../../datasets', help='dataset directory')
 parser.add_argument('--data_train', type=str, default='DIV2K', help='train dataset name')
 parser.add_argument('--data_test', type=str, default='DIV2K+Set5+Set14+B100+Urban100', help='test dataset name')
-parser.add_argument('--data_range', type=str, default='1-800/801-830', help='train/test data range')
+parser.add_argument('--data_range', type=str, default='1-800/801-830/1-2500/2501-2550', help='train/test data range')
 parser.add_argument('--scale', type=str, default='4', help='super resolution scale')
 parser.add_argument('--ext', type=str, default='sep', help='dataset file extension')
 
