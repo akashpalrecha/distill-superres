@@ -285,9 +285,12 @@ def format_time(seconds):
     if f == '':
         f = '0ms'
     return f
-    
-_, term_width = os.popen('stty size', 'r').read().split()
-term_width = int(term_width)    
+
+if args.popen_bug:
+    term_width = 135
+else:
+    _, term_width = os.popen('stty size', 'r').read().split()
+    term_width = int(term_width)    
 
 TOTAL_BAR_LENGTH = 65.
 last_time = time.time()
