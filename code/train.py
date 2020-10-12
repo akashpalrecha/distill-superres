@@ -168,7 +168,7 @@ def train(epoch):
         )
     else:
         student_ckp.write_log(
-            '[Epoch {}]\tLearning rate: {:.2e}\t Critic LR: {:.2e}'.format(epoch, lr, d_lr)
+            '[Epoch {}]\tLearning rate: {:.2e}\t'.format(epoch, lr)
         )
     
     timer_data, timer_model = utility.timer(), utility.timer()
