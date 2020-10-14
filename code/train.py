@@ -323,6 +323,8 @@ def print_args():
     msg += "Model settings\n"
     msg += "Teachers: %s\n" % args.teacher
     msg += "Student: %s\n" % args.model
+    msg += f"\tn_resgroups: {args.n_resgroups}"
+    msg += f"\tn_resblocks: {args.n_resblocks}"
 
     msg += "\n"
     
@@ -359,8 +361,6 @@ def print_args():
 
 
 if __name__ == "__main__":
-    msg = print_args()
-
     print("Preparing Data ====================================>")
     loader = data.Data(args)
     train_loader = loader.loader_train
@@ -375,6 +375,8 @@ if __name__ == "__main__":
         optimizer_crit = prepare_optimizer(is_critic=True, critic=critic)
     
     criterion = prepare_criterion()
+    
+    msg = print_args()
     student_ckp.write_log(msg)
 
     
