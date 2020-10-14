@@ -85,8 +85,8 @@ parser.add_argument('--RDNconfig', type=str, default='B', help='parameters confi
                     
 
 # RCAN hyper-parameters
-parser.add_argument('--n_resblocks', type=int, default=20, help='number of residual blocks')
-parser.add_argument('--n_resgroups', type=int, default=10, help='number of residual groups')
+parser.add_argument('--n_resblocks', type=int, default=4, help='number of residual blocks')
+parser.add_argument('--n_resgroups', type=int, default=4, help='number of residual groups')
 parser.add_argument('--reduction', type=int, default=16, help='number of feature maps reduction')
 
 
