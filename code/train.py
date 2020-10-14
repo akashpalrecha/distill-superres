@@ -366,8 +366,10 @@ if __name__ == "__main__":
     train_loader = loader.loader_train
     test_loader = loader.loader_test
 
-    teachers = load_teachers()
     student_ckp, student = create_student_model()
+    msg = print_args()
+    
+    teachers = load_teachers()
     optimizer = prepare_optimizer()
     critic = None
     if args.wgan:
@@ -376,7 +378,6 @@ if __name__ == "__main__":
     
     criterion = prepare_criterion()
     
-    msg = print_args()
     student_ckp.write_log(msg)
 
     
