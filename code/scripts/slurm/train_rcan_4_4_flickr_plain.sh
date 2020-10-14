@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -n 8
 #SBATCH -N 1
-#SBATCH -t 0-23:59
+#SBATCH -t 0-09:00
 #SBATCH -p seas_dgx1
 #SBATCH --exclude=seasdgx103
 #SBATCH --gres=gpu:1
