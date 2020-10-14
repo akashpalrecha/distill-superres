@@ -98,13 +98,13 @@ def create_student_model():
     print("Preparing Student ===================================>")
     student_checkpoint = utility.checkpoint(args)
     if args.model == 'EDSR':
-        args.n_resblocks = 16
-        args.n_feats = 64
+        # args.n_resblocks = 16
+        # args.n_feats = 64
         args.res_scale = 1.0
         student = edsr.EDSR(args).to(device)
     elif args.model == 'RCAN':
-        args.n_resblocks = 6
-        args.n_resgroups = 10
+        # args.n_resblocks = 6
+        # args.n_resgroups = 10
         student = rcan.RCAN(args).to(device)
     elif args.model == 'SAN':
         args.n_resblocks = 10
