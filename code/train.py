@@ -186,14 +186,13 @@ def train(epoch):
         teacher = teacher_selector(teachers)
         teacher_fms, teacher_sr = teacher(lr)
 
- 
-        student_fms = [student_fms[ind] for ind in eval(args.features)]
-        teacher_fms = [teacher_fms[ind] for ind in eval(args.features)]
-        
-        aggregated_student_fms = []
-        aggregated_teacher_fms = []
-        
         if args.feature_loss_used == 1:	
+            student_fms = [student_fms[ind] for ind in eval(args.features)]
+            teacher_fms = [teacher_fms[ind] for ind in eval(args.features)]
+            
+            aggregated_student_fms = []
+            aggregated_teacher_fms = []
+            
             if 'SA' in args.feature_distilation_type:
                 aggregated_student_fms.append([spatial_similarity(fm) for fm in student_fms])
                 aggregated_teacher_fms.append([spatial_similarity(fm) for fm in teacher_fms])
