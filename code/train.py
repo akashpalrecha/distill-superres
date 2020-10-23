@@ -130,7 +130,7 @@ def create_student_model():
     
     if args.freeze_upsampler:
         if getattr(student, 'tail', False):
-            student.tail.requires_grad_(False)
+            student.tail.apple(lambda x: x.requires_grad_(False))
         else:
             print("WARNING: Tried freezing upsampler, but student has no module with name `tail`.")
             
