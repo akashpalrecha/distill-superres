@@ -23,7 +23,9 @@ device = torch.device('cpu' if args.cpu else 'cuda')
 def load_teachers():
     print("Loading Teacher ====================================>")
     teachers = []
-    
+    n_resblocks = args.n_resblocks
+    n_resgroups = args.n_resgroups
+    n_feats     = args.n_feats
     if "EDSR" in args.teacher:
         args.n_feats = 256
         args.n_resblocks = 32
@@ -91,6 +93,10 @@ def load_teachers():
         for p in teacher.parameters():
             p.requires_grad = False
     
+    # resetting args vars
+    args.n_resblocks = n_resblocks
+    args.n_resgroups = n_resgroups
+    args.n_feats     = n_feats
     return teachers
     
     
@@ -119,6 +125,15 @@ def create_student_model():
     if args.resume:
         load_from = os.path.join(student_checkpoint.dir, 'model', 'model_latest.pt')
         student.load_state_dict_student(torch.load(load_from))
+    elif args.use_teacher_weights:
+        student.load_state_dict_student(teachers[0].state_dict())
+    
+    if args.freeze_upsampler:
+        if getattr(student, 'tail', False):
+            student.tail.requires_grad_(False)
+        else:
+            print("WARNING: Tried freezing upsampler, but student has no module with name `tail`.")
+            
     return student_checkpoint, student
     
 def prepare_criterion():
@@ -364,10 +379,10 @@ if __name__ == "__main__":
     train_loader = loader.loader_train
     test_loader = loader.loader_test
 
+    teachers = load_teachers()
     student_ckp, student = create_student_model()
     msg = print_args()
     
-    teachers = load_teachers()
     optimizer = prepare_optimizer()
     critic = None
     if args.wgan:

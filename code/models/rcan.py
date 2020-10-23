@@ -71,6 +71,7 @@ class RCAN(nn.Module):
         self.args = args
         
         self.n_resgroups = args.n_resgroups
+        self.return_last_feature = args.use_last_feature
         n_resblocks = args.n_resblocks
         n_feats = args.n_feats
         kernel_size = 3
@@ -118,7 +119,9 @@ class RCAN(nn.Module):
         
         res += x
 
-
+        if self.return_last_feature:
+            feature_maps.append(res)
+            
         x = self.tail(res)
         x = self.add_mean(x)
 
