@@ -21,7 +21,7 @@ cd Deblurring/distill-superres/code
 echo ""
 echo "---- BEGIN TRAINING ----"
 echo ""
-python train.py --ckp_dir overall_distillation/rcan/SA_rcan_200_x2/ --scale 2 --teacher [RCAN] --model RCAN --n_resblocks 6 --n_resgroups 10 --alpha 0.5 --feature_loss_used 1 --epochs 200 --patch_size 96 --chop --data_train DIV2K --features [1,2,3] --feature_distilation_type 10*SA
+python train.py --ckp_dir overall_distillation/rcan/SA_rcan_200_x2/ --scale 2 --teacher [RCAN] --model RCAN --n_resblocks 6 --n_resgroups 10 --alpha 0.5 --feature_loss_used 1 --epochs 200 --patch_size 96 --chop --data_train DIV2K --features [1,2,3] --feature_distilation_type 10*SA --resume -1
 echo ""
 echo "---- TRAINING COMPLETE ----"
 echo ""
