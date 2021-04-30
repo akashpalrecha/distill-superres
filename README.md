@@ -1,4 +1,13 @@
 # Knowledge Distillation for Super-Resolution
+
+#### IMPORTANT:
+
+> This repository contains the code I used to validate some methods used for knowledge distillation in super-resolution models. After a lot of experiments, I concluded that the results given in pretty much all the existing literature in this specific area are dubious. On testing the code provided by several authors as is, with painstaking error checking just to be sure, I found no paper was able to actually match the performance claimed by them.
+
+---
+---
+---
+
 ### Introduction
 
 This repository is the official implementation of the paper **"FAKD: Feature-Affinity Based Knowledge Distillation for Efficient Image Super-Resolution"** from **ICIP 2020**. In this work, we propose a novel and efficient SR model, name Feature Affinity-based Knowledge Distillation (FAKD), by transferring the structural  knowledge of a heavy teacher model to a lightweight student model. To transfer the structural knowledge effectively, FAKD aims to distill the second-order statistical information from feature maps and trains a lightweight student network with low computational and memory cost. Experimental results demonstrate the efficacy of our method and superiority over other knowledge distillation based methods in terms of both quantitative and visual metrics.
